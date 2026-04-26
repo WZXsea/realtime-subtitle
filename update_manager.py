@@ -1,5 +1,6 @@
 import re
 import webbrowser
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
@@ -15,11 +16,23 @@ class UpdateCheckResult:
     latest_version: str = ""
     release_name: str = ""
     release_url: str = ""
+    download_url: str = ""
+    download_name: str = ""
+    download_size: int = 0
     published_at: str = ""
     body: str = ""
     has_update: bool = False
     error: str = ""
     status_code: Optional[int] = None
+
+
+@dataclass
+class DownloadResult:
+    success: bool
+    repo: str
+    version: str
+    file_path: str = ""
+    error: str = ""
 
 
 def normalize_version_tag(tag: str) -> str:
@@ -113,12 +126,78 @@ class GitHubReleaseChecker:
         result.published_at = str(data.get("published_at") or "")
         result.body = str(data.get("body") or "")
 
+        asset = self._pick_download_asset(data.get("assets") or [])
+        if asset:
+            result.download_name = str(asset.get("name") or "")
+            result.download_url = str(asset.get("browser_download_url") or "")
+            try:
+                result.download_size = int(asset.get("size") or 0)
+            except (TypeError, ValueError):
+                result.download_size = 0
+
         if not result.latest_version:
             result.error = "Release 未提供可识别的版本号。"
             return result
 
+        if result.has_update is False and compare_versions(result.latest_version, current_version) <= 0:
+            # Keep asset info available for manual download anyway.
+            pass
+
         result.has_update = compare_versions(result.latest_version, current_version) > 0
+        if result.has_update and not result.download_url:
+            result.error = "发现新版本，但该 Release 没有可下载的安装包。"
         return result
+
+    def _pick_download_asset(self, assets):
+        if not assets:
+            return None
+
+        def score(asset):
+            name = str(asset.get("name") or "").lower()
+            if name.endswith(".dmg"):
+                return 0
+            if name.endswith(".zip"):
+                return 1
+            if name.endswith(".pkg"):
+                return 2
+            return 9
+
+        return sorted(assets, key=score)[0]
+
+
+def download_release_asset(download_url: str, target_dir: str, filename: str, timeout: float = 30.0, progress_callback=None):
+    target_dir = Path(target_dir).expanduser()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    safe_name = filename or Path(download_url).name or "update.dmg"
+    target_path = target_dir / safe_name
+
+    headers = {
+        "Accept": "application/octet-stream",
+        "User-Agent": f"RealtimeSubtitle/{APP_VERSION}",
+    }
+
+    try:
+        with requests.get(download_url, headers=headers, stream=True, timeout=timeout) as response:
+            response.raise_for_status()
+            total = int(response.headers.get("content-length") or 0)
+            downloaded = 0
+            chunk_size = 1024 * 1024
+
+            with open(target_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=chunk_size):
+                    if not chunk:
+                        continue
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if progress_callback and total > 0:
+                        pct = int(downloaded * 100 / total)
+                        progress_callback(pct, f"正在下载更新... {pct}%")
+                    elif progress_callback:
+                        progress_callback(-1, f"正在下载更新... {downloaded // (1024 * 1024)}MB")
+
+        return DownloadResult(True, "", "", str(target_path))
+    except Exception as exc:
+        return DownloadResult(False, "", "", "", str(exc))
 
 
 def open_release_page(url: str):

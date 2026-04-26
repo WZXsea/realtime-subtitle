@@ -1018,7 +1018,7 @@ class Pipeline(QObject):
             detected = self.transcriber.detected_language
             if detected and detected != getattr(self, '_current_lang', None):
                 self._current_lang = detected
-                print(f"[Pipeline] 🌐 Detected language: {detected}")
+                print(f"[Pipeline] Detected language: {detected}")
                 if config.apply_language_profile(detected):
                     # Update audio capture thresholds live
                     self.audio.silence_threshold = config.silence_threshold

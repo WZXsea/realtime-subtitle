@@ -2,7 +2,7 @@
 
 import os
 
-APP_VERSION = "2.0.0"
+APP_VERSION = "3.0.0"
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
@@ -72,7 +72,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='实时字幕翻译',
+    name='译世界',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -93,13 +93,13 @@ coll = COLLECT(
     strip=False,
     upx=False, # DISABLED: Consistency with EXE
     upx_exclude=[],
-    name='实时字幕翻译',
+    name='译世界',
 )
 
 app = BUNDLE(
     coll,
-    name='实时字幕翻译.app',
-    icon=None, # Add .icns path if available
+    name='译世界.app',
+    icon='assets/transworld.icns',
     bundle_identifier='com.weizixun.realtime.subtitle',
     info_plist={
         'NSMicrophoneUsageDescription': '需要访问音频输入（如 BlackHole）来捕捉系统声音进行实时翻译。',

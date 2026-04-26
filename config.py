@@ -2,7 +2,7 @@ import os
 import sys
 import configparser
 
-APP_VERSION = "2.0.0"
+APP_VERSION = "3.0.0"
 
 # CRITICAL: Prevent HuggingFace from triggering macOS AuthKit (Keychain) prompts
 # This is a common cause of SIGABRT/EXC_GUARD crashes in sandboxed app bundles.
@@ -34,15 +34,15 @@ try:
     import certifi
     os.environ["SSL_CERT_FILE"] = certifi.where()
     os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
-    print(f"[Config] 🛡️ SSL Certificates patched via certifi: {certifi.where()}")
+    print(f"[Config] SSL Certificates patched via certifi: {certifi.where()}")
 except ImportError:
-    print("[Config] ⚠️ certifi not found. SSL verification might fail in bundled mode.")
+    print("[Config] certifi not found. SSL verification might fail in bundled mode.")
 
 # 2. HuggingFace Mirror Optimization (Pre-emptively setting hf-mirror.com)
 # This significantly improves download success rate in regions with filtered access.
 if not os.getenv("HF_ENDPOINT"):
     os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
-    print("[Config] 🌐 HuggingFace Mirror auto-enabled: https://hf-mirror.com")
+    print("[Config] HuggingFace Mirror auto-enabled: https://hf-mirror.com")
 
 
 # 3. Persistent Logging Patch
@@ -61,7 +61,7 @@ def setup_logging():
         import datetime
         print(f"\n--- SESSION START: {datetime.datetime.now()} ---")
     except Exception as e:
-        print(f"[Config] ⚠️ Logging redirect failed: {e}")
+        print(f"[Config] Logging redirect failed: {e}")
 
 # Only redirect if NOT running in interactive Terminal 
 # (i.e., when bundled or run from Finder)
@@ -83,7 +83,7 @@ class Config:
 
     def reload(self):
         """Reload configuration from disk"""
-        print("[Config] 🔄 Reloading configuration from disk...")
+        print("[Config] Reloading configuration from disk...")
         self.load()
 
     def load(self):
@@ -268,7 +268,7 @@ class Config:
         self.transcript_save_dir = os.path.abspath(transcript_save_dir)
 
         # Update settings
-        self.update_repo = self._get("updates", "repo", "WZXsea/realtime-subtitle").strip()
+        self.update_repo = self._get("updates", "repo", "WZXsea/transworld").strip()
         self.auto_check_updates = (
             self._get("updates", "auto_check_updates", "true").lower() == "true"
         )
@@ -358,7 +358,7 @@ class Config:
                     changed = True
 
         if changed:
-            print(f"[Config] 🔄 Auto-switched to [{lang_section}] profile:")
+            print(f"[Config] Auto-switched to [{lang_section}] profile:")
             print(
                 f"  -> threshold={self.silence_threshold}, duration={self.silence_duration}, max_phrase={self.max_phrase_duration}"
             )
@@ -455,7 +455,7 @@ class Config:
             # [updates] section
             if not self.config.has_section("updates"):
                 self.config.add_section("updates")
-            self.config.set("updates", "repo", getattr(self, "update_repo", "WZXsea/realtime-subtitle"))
+            self.config.set("updates", "repo", getattr(self, "update_repo", "WZXsea/transworld"))
             self.config.set(
                 "updates",
                 "auto_check_updates",
@@ -464,10 +464,10 @@ class Config:
 
             with open(config_path, "w", encoding="utf-8") as f:
                 self.config.write(f)
-            print(f"[Config] ✅ Configuration saved to {config_path}")
+            print(f"[Config] Configuration saved to {config_path}")
             return True
         except Exception as e:
-            print(f"[Config] ❌ Failed to save config: {e}")
+            print(f"[Config] Failed to save config: {e}")
             return False
 
     def get_vendor_settings(self, name):
@@ -635,7 +635,7 @@ class Config:
 
         # [updates]
         default_config["updates"] = {
-            "repo": "WZXsea/realtime-subtitle",
+            "repo": "WZXsea/transworld",
             "auto_check_updates": "true",
         }
 
@@ -662,9 +662,9 @@ class Config:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             with open(save_path, "w", encoding="utf-8") as f:
                 default_config.write(f)
-            print(f"[Config] ✅ Successfully generated default config at {save_path}")
+            print(f"[Config] Successfully generated default config at {save_path}")
         except Exception as e:
-            print(f"[Config] ❌ Failed to create default config: {e}")
+            print(f"[Config] Failed to create default config: {e}")
 
 
 # Global config instance

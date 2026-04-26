@@ -45,7 +45,7 @@ class SettingsWindow(QWidget):
         model_row_layout.setContentsMargins(0,0,0,0)
         model_row_layout.addWidget(self.model_input)
         
-        self.refresh_btn = QPushButton("🔄")
+        self.refresh_btn = QPushButton("刷新")
         self.refresh_btn.setToolTip("Fetch models from server")
         self.refresh_btn.setFixedWidth(30)
         self.refresh_btn.clicked.connect(self.fetch_models)

@@ -86,18 +86,18 @@ class AudioDeviceManager:
             if not silent:
                 print("[AudioDeviceManager] Audio MIDI Setup opened.\n")
                 print("═" * 60)
-                print("📋 MANUAL STEPS (Easy!):\n")
-                print("  1️⃣  In the Audio MIDI Setup window (bottom-left corner):")
+                print("MANUAL STEPS:\n")
+                print("  1. In the Audio MIDI Setup window (bottom-left corner):")
                 print("     Click the [+] button")
-                print("\n  2️⃣  Select 'Create Multi-Output Device'\n")
-                print("  3️⃣  Check the boxes for:")
-                print(f"     ✓ Your speakers (e.g., External Headphones, MacBook Pro Speakers)")
-                print(f"     ✓ BlackHole 2ch (for capturing audio)\n")
-                print("  4️⃣  IMPORTANT: Uncheck 'Drift Correction' for your speakers")
+                print("\n  2. Select 'Create Multi-Output Device'\n")
+                print("  3. Check the boxes for:")
+                print(f"     - Your speakers (e.g., External Headphones, MacBook Pro Speakers)")
+                print(f"     - BlackHole 2ch (for capturing audio)\n")
+                print("  4. IMPORTANT: Uncheck 'Drift Correction' for your speakers")
                 print("     (so you can hear the audio)\n")
-                print("  5️⃣  Set this new device as your system output in System Settings\n")
+                print("  5. Set this new device as your system output in System Settings\n")
                 print("═" * 60)
-                print("\n💡 TIP: You only need to do this once. The device will persist.\n")
+                print("\nTIP: You only need to do this once. The device will persist.\n")
             
             # Try automated approach (may fail without permissions)
             if not silent:
@@ -131,16 +131,16 @@ class AudioDeviceManager:
             
             if result.returncode == 0 and "success" in result.stdout:
                 if not silent:
-                    print("✅ [AudioDeviceManager] Automation successful!")
+                    print("[AudioDeviceManager] Automation successful!")
                     print("   Now configure the device checkboxes as shown above.\n")
                 return True
             else:
                 if not silent:
-                    print("⚠️  [AudioDeviceManager] Automation failed (permissions needed).")
+                    print("[AudioDeviceManager] Automation failed (permissions needed).")
                     print("   Please follow the manual steps above.\n")
                     print("   To enable automation in the future:")
-                    print("   → System Settings > Privacy & Security > Accessibility")
-                    print("   → Add your Terminal/IDE and toggle it ON\n")
+                    print("   -> System Settings > Privacy & Security > Accessibility")
+                    print("   -> Add your Terminal/IDE and toggle it ON\n")
                 return True  # Still return True since we opened the app
                 
         except subprocess.TimeoutExpired:

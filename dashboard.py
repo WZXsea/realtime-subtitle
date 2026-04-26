@@ -47,7 +47,11 @@ from config import config as app_cfg, APP_VERSION
 from model_manager import ModelManager
 from overlay_window import OverlayWindow
 from main import SaveResultNotifier
-from update_manager import GitHubReleaseChecker, open_release_page
+from update_manager import (
+    GitHubReleaseChecker,
+    download_release_asset,
+    open_release_page,
+)
 
 
 def map_legacy_lang(lang):
@@ -222,7 +226,7 @@ class Dashboard(QWidget):
         }
         self.PROTECTED_PROVIDERS = set(self.VENDOR_TEMPLATES.keys()) | {"[自定义]"}
 
-        self.setWindowTitle(f"AI爱翻译 v{APP_VERSION} - 控制中心")
+        self.setWindowTitle(f"译世界 v{APP_VERSION} - 控制中心")
         self.setMinimumSize(850, 650)
         self.setStyleSheet(STYLESHEET)
 
@@ -238,7 +242,7 @@ class Dashboard(QWidget):
         self.sidebar_layout.setContentsMargins(10, 20, 10, 20)
         self.sidebar_layout.setSpacing(5)
 
-        logo = QLabel("🎙️ AI爱翻译")
+        logo = QLabel("译世界")
         logo.setStyleSheet(
             "font-size: 18px; font-weight: bold; padding: 10px; color: #1e66f5; margin-bottom: 20px;"
         )
@@ -262,7 +266,7 @@ class Dashboard(QWidget):
         header_layout.setContentsMargins(0, 0, 0, 10)
 
         title_vbox = QVBoxLayout()
-        self.header_title = QLabel("🎙️ 首页")
+        self.header_title = QLabel("首页")
         self.header_title.setStyleSheet(
             "font-size: 26px; font-weight: bold; color: #1e66f5;"
         )
@@ -281,15 +285,15 @@ class Dashboard(QWidget):
         self.main_layout.addWidget(self.stack, stretch=1)
 
         # Initialize Tabs
-        self.add_nav_item("🏠 首页", self.init_home_tab())
-        self.add_nav_item("🎤 音频设置", self.init_audio_tab())
-        self.add_nav_item("📝 语音识别", self.init_transcription_tab())
-        self.add_nav_item("🌐 翻译设置", self.init_translation_tab())
-        self.add_nav_item("📁 保存位置", self.init_output_tab())
-        self.add_nav_item("🔄 更新", self.init_update_tab())
-        self.add_nav_item("🔧 设备管理", self.init_device_manager_tab())
-        self.add_nav_item("📦 模型管理", self.init_model_management_tab())
-        self.add_nav_item("💡 提示词", self.init_prompt_tab())
+        self.add_nav_item("首页", self.init_home_tab())
+        self.add_nav_item("音频设置", self.init_audio_tab())
+        self.add_nav_item("语音识别", self.init_transcription_tab())
+        self.add_nav_item("翻译设置", self.init_translation_tab())
+        self.add_nav_item("保存位置", self.init_output_tab())
+        self.add_nav_item("更新", self.init_update_tab())
+        self.add_nav_item("设备管理", self.init_device_manager_tab())
+        self.add_nav_item("模型管理", self.init_model_management_tab())
+        self.add_nav_item("提示词", self.init_prompt_tab())
 
         self.sidebar_layout.addStretch()
 
@@ -300,7 +304,7 @@ class Dashboard(QWidget):
             "background-color: #fe640b; border-radius: 8px; margin: 5px;"
         )
         env_layout = QHBoxLayout(self.env_banner)
-        self.env_label = QLabel("⚠️ 未检测到 BlackHole 虚拟声卡")
+        self.env_label = QLabel("未检测到 BlackHole 虚拟声卡")
         self.env_label.setStyleSheet("color: white; font-weight: bold;")
         self.env_help_btn = QPushButton("解决方案")
         self.env_help_btn.setFixedWidth(80)
@@ -315,13 +319,13 @@ class Dashboard(QWidget):
 
         # Footer
         footer = QHBoxLayout()
-        self.restart_btn = QPushButton("🔄 重启程序")
+        self.restart_btn = QPushButton("重启程序")
         self.restart_btn.clicked.connect(self.restart_program)
 
-        self.quit_btn = QPushButton("🚪 退出程序")
+        self.quit_btn = QPushButton("退出程序")
         self.quit_btn.clicked.connect(self.close)
 
-        self.save_btn = QPushButton("💾 保存设置")
+        self.save_btn = QPushButton("保存设置")
         self.save_btn.setProperty("primary", True)
         self.save_btn.clicked.connect(self.save_config)
 
@@ -348,7 +352,7 @@ class Dashboard(QWidget):
 
     def switch_page(self, idx, clicked_btn):
         self.stack.setCurrentIndex(idx)
-        self.header_title.setText(f"🎙️ {clicked_btn.text()}")
+        self.header_title.setText(clicked_btn.text())
         for btn in self.nav_buttons:
             btn.setProperty("active", btn == clicked_btn)
             btn.setStyle(btn.style())
@@ -412,18 +416,18 @@ class Dashboard(QWidget):
         layout.addWidget(self.progress_container)
 
         btns = QHBoxLayout()
-        self.start_btn = QPushButton("▶ 启动翻译")
+        self.start_btn = QPushButton("启动翻译")
         self.start_btn.setFixedSize(160, 55)
         self.start_btn.setObjectName("StartButton")
         self.start_btn.clicked.connect(self.on_start)
 
-        self.stop_btn = QPushButton("⏹ 停止翻译")
+        self.stop_btn = QPushButton("停止翻译")
         self.stop_btn.setFixedSize(160, 55)
         self.stop_btn.setObjectName("StopButton")
         self.stop_btn.clicked.connect(self.on_stop)
         self.stop_btn.hide()
 
-        self.pause_btn = QPushButton("⏸ 暂停翻译")
+        self.pause_btn = QPushButton("暂停翻译")
         self.pause_btn.setFixedSize(160, 55)
         self.pause_btn.setObjectName("PauseButton")
         self.pause_btn.clicked.connect(self.on_pause_toggle)
@@ -462,7 +466,7 @@ class Dashboard(QWidget):
             self._startup_fake_timer.start()
             self.start_btn.setEnabled(False)
             self.start_btn.hide()
-            self.start_btn.setText("▶ 启动翻译")
+            self.start_btn.setText("启动翻译")
 
             self.startup_worker = StartupWorker()
             self.startup_worker.progress.connect(self.on_startup_progress)
@@ -552,7 +556,7 @@ class Dashboard(QWidget):
             self.start_btn.hide()
             self.pause_btn.show()
             self.pause_btn.setEnabled(True)
-            self.pause_btn.setText("⏸ 暂停翻译")
+            self.pause_btn.setText("暂停翻译")
             self.stop_btn.show()
             self.stop_btn.setEnabled(True)
         else:
@@ -560,7 +564,7 @@ class Dashboard(QWidget):
             self.progress_container.hide()
             self.start_btn.setEnabled(True)
             self.start_btn.show()
-            self.start_btn.setText("▶ 启动翻译")
+            self.start_btn.setText("启动翻译")
             self._startup_fake_target = 0
 
     def on_pause_toggle(self):
@@ -572,13 +576,13 @@ class Dashboard(QWidget):
             paused = False
             self.status_label.setText("正在运行")
             self.status_label.setStyleSheet("color: #40a02b; font-weight: bold;")
-            self.pause_btn.setText("⏸ 暂停翻译")
+            self.pause_btn.setText("暂停翻译")
         else:
             self.pipeline.pause()
             paused = True
             self.status_label.setText("已暂停")
             self.status_label.setStyleSheet("color: #fe640b; font-weight: bold;")
-            self.pause_btn.setText("▶ 继续翻译")
+            self.pause_btn.setText("继续翻译")
 
         if self.overlay_window:
             self.overlay_window.set_paused(paused)
@@ -601,7 +605,7 @@ class Dashboard(QWidget):
         self.status_label.setText("准备就绪")
         self.status_label.setStyleSheet("color: #40a02b; font-weight: bold;")
         self.pause_btn.hide()
-        self.pause_btn.setText("⏸ 暂停翻译")
+        self.pause_btn.setText("暂停翻译")
         self.stop_btn.hide()
         self.start_btn.show()
         self.start_btn.setEnabled(True)
@@ -817,7 +821,7 @@ class Dashboard(QWidget):
         self.populate_devices()
         device_wrapper.addWidget(self.device_combo, stretch=1)
         
-        refresh_btn = QPushButton("🔄")
+        refresh_btn = QPushButton("刷新")
         refresh_btn.setFixedWidth(40)
         refresh_btn.clicked.connect(self.populate_devices)
         device_wrapper.addWidget(refresh_btn)
@@ -911,7 +915,7 @@ class Dashboard(QWidget):
         self.api_provider.currentTextChanged.connect(self._on_provider_changed)
         provider_wrapper.addWidget(self.api_provider)
 
-        self.delete_provider_btn = QPushButton("🗑️ 删除")
+        self.delete_provider_btn = QPushButton("删除")
         self.delete_provider_btn.setFixedWidth(80)
         self.delete_provider_btn.clicked.connect(self._on_delete_provider)
         
@@ -945,7 +949,7 @@ class Dashboard(QWidget):
         # We will use _on_provider_changed to finish initialization
         model_row.addWidget(self.model, stretch=1)
         
-        self.fetch_models_btn = QPushButton("✨ 获取")
+        self.fetch_models_btn = QPushButton("获取")
         self.fetch_models_btn.setFixedWidth(80)
         self.fetch_models_btn.setToolTip("从官方 API 动态获取所有可用的模型列表")
         self.fetch_models_btn.clicked.connect(self._fetch_models)
@@ -970,7 +974,7 @@ class Dashboard(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(16)
 
-        title = QLabel("📁 日志保存位置")
+        title = QLabel("日志保存位置")
         title.setStyleSheet("font-size: 22px; font-weight: bold; color: #1e66f5;")
         layout.addWidget(title)
 
@@ -1020,7 +1024,7 @@ class Dashboard(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(16)
 
-        title = QLabel("🔄 自动更新")
+        title = QLabel("自动更新")
         title.setStyleSheet("font-size: 22px; font-weight: bold; color: #1e66f5;")
         layout.addWidget(title)
 
@@ -1035,7 +1039,7 @@ class Dashboard(QWidget):
         form = QFormLayout()
 
         self.update_repo_input = QLineEdit(app_cfg.update_repo)
-        self.update_repo_input.setPlaceholderText("WZXsea/realtime-subtitle")
+        self.update_repo_input.setPlaceholderText("WZXsea/transworld")
         form.addRow("检查仓库:", self.update_repo_input)
 
         self.auto_check_updates_check = QCheckBox("启动时自动检查更新")
@@ -1080,7 +1084,7 @@ class Dashboard(QWidget):
             url = f"{base_url.rstrip('/')}/models"
             headers = {"Authorization": f"Bearer {api_key}"}
             
-            self.header_title.setText("📡 正在获取模型...")
+            self.header_title.setText("正在获取模型...")
             QApplication.processEvents()
             
             response = requests.get(url, headers=headers, timeout=10)
@@ -1107,7 +1111,7 @@ class Dashboard(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "请求失败", f"无法获取模型列表:\n{str(e)}")
         finally:
-            self.header_title.setText("🌐 翻译设置")
+            self.header_title.setText("翻译设置")
 
     def _on_provider_changed(self, provider):
         """Update API fields when provider changes, clearing if '[自定义]' is selected"""
@@ -1187,7 +1191,7 @@ class Dashboard(QWidget):
         refresh_btn = QPushButton("刷新设备")
         refresh_btn.clicked.connect(self.refresh_audio_devices)
         layout.addWidget(refresh_btn)
-        create_btn = QPushButton("➕ 创建多输出设备")
+        create_btn = QPushButton("创建多输出设备")
         create_btn.clicked.connect(self.create_multi_output_device)
         layout.addWidget(create_btn)
         self.refresh_audio_devices()
@@ -1217,11 +1221,11 @@ class Dashboard(QWidget):
         layout.setSpacing(15)
 
         header = QHBoxLayout()
-        title = QLabel("📦 模型管理")
+        title = QLabel("模型管理")
         title.setStyleSheet("font-size: 22px; font-weight: bold; color: #1e66f5;")
         header.addWidget(title)
         header.addStretch()
-        self.model_refresh_btn = QPushButton("🔄 刷新")
+        self.model_refresh_btn = QPushButton("刷新")
         self.model_refresh_btn.setFixedWidth(100)
         self.model_refresh_btn.clicked.connect(self._refresh_model_list)
         header.addWidget(self.model_refresh_btn)
@@ -1282,9 +1286,9 @@ class Dashboard(QWidget):
             groups.setdefault(m["backend"], []).append(m)
 
         backend_labels = {
-            "mlx": "🧠 MLX (Apple Silicon)",
-            "whisper": "⚡ Faster Whisper",
-            "funasr": "🌐 FunASR",
+            "mlx": "MLX (Apple Silicon)",
+            "whisper": "Faster Whisper",
+            "funasr": "FunASR",
         }
 
         for backend in ["mlx", "whisper", "funasr"]:

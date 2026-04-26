@@ -433,8 +433,8 @@ class OverlayWindow(QWidget):
         
         # Initialize Buttons
         from PyQt6.QtWidgets import QPushButton, QStyle 
-        self.save_btn = QPushButton("💾 保存")
-        self._save_btn_default_text = "💾 保存"
+        self.save_btn = QPushButton("保存")
+        self._save_btn_default_text = "保存"
         self.save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.save_btn.setFixedWidth(80)
         self.save_btn.setStyleSheet("""
@@ -452,7 +452,7 @@ class OverlayWindow(QWidget):
         self.save_btn.clicked.connect(self._save_transcript)
         
         # Clear Button
-        self.clear_btn = QPushButton("🗑 清除")
+        self.clear_btn = QPushButton("清除")
         self.clear_btn.setToolTip("清除屏幕上的所有记录")
         self.clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clear_btn.setFixedWidth(80)
@@ -470,7 +470,7 @@ class OverlayWindow(QWidget):
         """)
         self.clear_btn.clicked.connect(self._clear_history)
         
-        self.stop_btn = QPushButton("⏹")
+        self.stop_btn = QPushButton("停止")
         self.stop_btn.setToolTip("停止翻译")
         self.stop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.stop_btn.setFixedSize(30, 30)
@@ -488,7 +488,7 @@ class OverlayWindow(QWidget):
         """)
         self.stop_btn.clicked.connect(self.stop_requested.emit)
 
-        self.pause_btn = QPushButton("⏸")
+        self.pause_btn = QPushButton("暂停")
         self.pause_btn.setToolTip("暂停/继续翻译")
         self.pause_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.pause_btn.setFixedSize(30, 30)
@@ -785,7 +785,7 @@ class OverlayWindow(QWidget):
         
         self.items.clear()
         self.transcript_data.clear()
-        print("[Overlay] 🗑 History cleared")
+        print("[Overlay] History cleared")
 
     def _save_transcript(self):
         """Request the pipeline to save and refine the current transcript"""
@@ -808,7 +808,7 @@ class OverlayWindow(QWidget):
         self.save_btn.setText(self._save_btn_default_text)
 
     def set_paused(self, paused):
-        self.pause_btn.setText("▶" if paused else "⏸")
+        self.pause_btn.setText("继续" if paused else "暂停")
         self.pause_btn.setToolTip("继续翻译" if paused else "暂停翻译")
 
     def update_token_stats(self, stats):

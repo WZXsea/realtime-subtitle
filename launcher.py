@@ -68,7 +68,7 @@ class DependencyInstaller(QThread):
 class LauncherWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle(f"Real-Time Translator v{APP_VERSION} - Launcher")
+        self.setWindowTitle(f"译世界 v{APP_VERSION} - 启动器")
         self.setFixedSize(400, 200)
         
         # Central Widget
@@ -79,7 +79,7 @@ class LauncherWindow(QMainWindow):
         central_widget.setLayout(self.layout)
         
         # Title
-        self.label = QLabel("Initializing Real-Time Translator...")
+        self.label = QLabel("正在初始化 译世界...")
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label.setStyleSheet("font-size: 16px; font-weight: bold; margin-bottom: 10px;")
         self.layout.addWidget(self.label)
@@ -90,13 +90,13 @@ class LauncherWindow(QMainWindow):
         self.layout.addWidget(self.pbar)
         
         # Log Label
-        self.log_label = QLabel("Checking environment...")
+        self.log_label = QLabel("正在检查运行环境...")
         self.log_label.setStyleSheet("color: #666; font-size: 12px;")
         self.log_label.setWordWrap(True)
         self.layout.addWidget(self.log_label)
         
         # Start Button (Hidden initially)
-        self.start_btn = QPushButton("Launch Application")
+        self.start_btn = QPushButton("启动程序")
         self.start_btn.setStyleSheet("""
             background-color: #3498db; color: white; padding: 10px; font-weight: bold; border-radius: 5px;
         """)

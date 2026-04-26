@@ -74,5 +74,5 @@ update_interval = 0.8
 streaming_overlap = 0.3
 
 [updates]
-repo = WZXsea/realtime-subtitle
+repo = WZXsea/transworld
 auto_check_updates = true

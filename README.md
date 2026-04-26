@@ -1,148 +1,175 @@
-# Real-Time Translator 🎙️➡️🇨🇳
+# 译世界
 
-**v2.0.0**
+**v3.0.0**
 
-本版本重点优化了实时字幕体验：启动提示更清晰、悬浮窗堆叠更稳定、保存流程更顺滑、加入 token 统计、支持自动检查更新，并继续优化了流式字幕更新效果。
+这是一个面向 macOS 的实时语音转文字与翻译软件，重点优化了实时字幕的流畅度、稳定性和可用性。
 
-A high-performance real-time speech-to-text and translation application built for macOS (Apple Silicon optimized).
+这一版的重点包括：
+- 启动提示更清晰
+- 悬浮窗堆叠更稳定
+- 保存流程更顺滑
+- 增加 token 统计
+- 支持自动检查更新
+- 优化长句与快语速场景下的翻译策略
 
-## Features
-- **⚡️ Real-Time Transcription**: Instant streaming display using `faster-whisper`, `mlx-whisper`, or `FunASR`.
-- **🎯 Multiple ASR Backends**: Choose between Whisper (multilingual), MLX (Apple Silicon optimized), or FunASR (industrial-grade Chinese/English).
-- **🌊 Word-by-Word Streaming**: See text appear as you speak, with smart context accumulation.
-- **🔄 Async Translation**: Translates text to Chinese (or target language) in the background without blocking the UI.
-- **🖥️ Overlay UI**: Always-on-top, transparent, click-through window for seamless usage during meetings/videos.
-- **⚙️ Hot Reloading**: Change code or config and the app restarts automatically.
-- **💾 Transcript Saving**: One-click save of your session history. Can be used as subtitle or LLM analyze.
-- **🔄 自动检查更新**：控制中心可以检查你自己的 GitHub Releases 仓库是否有新版本。
+## 项目特点
 
-## Demo
+- **实时转写**：支持 `faster-whisper`、`mlx-whisper`、`FunASR`
+- **多引擎后端**：可在 Whisper、MLX、FunASR 之间切换
+- **流式字幕**：支持边说边出字，减少等待感
+- **后台翻译**：翻译在后台异步进行，不阻塞界面
+- **悬浮窗显示**：可置顶、透明、点击穿透，适合边看视频边使用
+- **保存日志**：可将当前会话整理并导出
+- **自动检查更新**：可配置自己的 GitHub Releases 仓库，自动发现新版本
+
+## 截图与演示
+
+演示视频：
+
 https://github.com/user-attachments/assets/9982fe5d-3937-42d5-bcfc-e23748c01edf
+
+主界面示意：
 
 ![Dashboard](./demo/main_dashboard.png)
 
-## Installation
+## 安装
 
-1. **Prerequisites**:
-   - Python 3.10+
-   - macOS (recommended for `mlx-whisper` support)
-   - `ffmpeg` installed (e.g., `brew install ffmpeg`)
-   - `BlackHole` installed (e.g., `brew install blackhole-2ch`, need to enter system password)
-   - `BlackHole` Settings![BlackHole Settings](demo/how_to_set_blackhole.png)
+### 1. 环境要求
 
-2. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   
-   *(Ensure you have `PyQt6`, `sounddevice`, `numpy`, `openai`, `watchdog` installed)*
+- Python 3.10+
+- macOS
+- `ffmpeg`
+- `BlackHole` 虚拟声卡
 
-   **🪟 Windows Users**:
-   1. Double-click `install_windows.bat` to automatically set up the environment.
-   2. Ensure [FFmpeg](https://ffmpeg.org/download.html) is installed and added to your PATH.
+### 2. 安装依赖
 
-   **🖥 MacOS Users**:
-   1. Use terminal to run `install_mac.sh`
+```bash
+pip install -r requirements.txt
+```
 
-## ✨ New Features & Quick Start
-- **Modern Control Center**: Manage all settings in a dark-themed Dashboard.
-- **One-Click Launch**: Start the overlay translator directly from the Dashboard.
-- **Auto-Dependency Check**: Automatically installs missing requirements.
-- **Audio Device Selection**: Choose your specific microphone input.
+### 3. macOS 相关说明
 
-## Usage
+- 建议使用 `BlackHole 2ch`
+- 如果需要监听系统声音，请在“音频 MIDI 设置”里正确配置输入输出设备
 
-### 1. Start the Application
-Run the helper script for your OS:
-- **Mac/Linux**: `./start_mac.sh`
-- **Windows**: `start_windows.bat`
+## 启动方式
 
-### 2. The Dashboard
-The application opens the **Real-Time Translator Control Center**.
-- **Home**: Click **"▶ Launch Translator"** to start the overlay.
-- **Audio**: Select your Input Device and adjust Silence Threshold.
-  * <details>
-     <summary>How to Set</summary>
-     1. Audio MIDI Setup: create multiple devices, including `BlackHole 2ch` device, and if you want to listen too, remember adding system output device
+### 开发模式
 
-     ![](./demo/Audio_MIDI_Setup.png)
+- macOS / Linux：`./start_mac.sh`
+- Windows：`start_windows.bat`
 
-     2. Choose target audio device to capture
+### 打包版本
 
-     ![](./demo/Audio_configuraiton.png)
-   </details>
-- **Transcription**: Choose Whisper model size (tiny, base, small, medium, large-v3, [see the difference](https://github.com/openai/whisper?tab=readme-ov-file#available-models-and-languages)).
-  * <details>
-     <summary>How to Set</summary>
-     
-     * MacOS
-       * Whisper Model: base
-       * Compute Device: audo
-       * Quantization: float16
-   </details>
-- **Translation**: Set your OpenAI API Key and Target Language.
-- **Save Settings**: Click "Save Settings" to persist your configuration.
+双击 `译世界.app` 或者挂载 `译世界_v3.0.0.dmg` 后拖入 `Applications`
 
-### 3. The Overlay
-Once launched, a transparent window appears:
-- **Move**: Click and drag text to move.
-- **Resize**: Drag the bottom-right handle (◢).
-- **Stop**: Click **"⏹"** on the overlay or "Stop Translator" in the Dashboard.
-- **Save**: Click **"💾 Save"** to export transcript.
+## 使用说明
 
-## ⚙️ Configuration Reference
-Settings are managed via the Dashboard, but stored in `config.ini`.
+### 首页
 
-#### `[api]` Section
-| Parameter | Description | Examples |
-| :--- | :--- | :--- |
-| `base_url` | API Endpoint | `https://api.openai.com/v1`, `http://localhost:11434/v1` |
-| `api_key` | Auth Key | `sk-...` (or `dummy` for local) |
-| `target_lang` | Output Language | `Chinese`, `English`, `Japanese` |
+- 点击“启动翻译”即可开始
+- 可以暂停、继续、停止
+- 可在此检查更新
 
-#### `[transcription]` Section
-| Parameter | Description | Details |
-| :--- | :--- | :--- |
-| `backend` | ASR Engine | `whisper` (default), `mlx` (Apple Silicon), `funasr` (Alibaba) |
-| `whisper_model` | Whisper Model Size | `tiny` (fast), `large-v3` (accurate) |
-| `funasr_model` | FunASR Model Name | `paraformer-zh` (Chinese), `SenseVoiceSmall` (Multi-lang) |
-| `device` | Compute Unit | `auto` (Apple Neural Engine), `cuda` (NVIDIA) |
+### 音频设置
 
-#### `[audio]` Section
-| Parameter | Description | Details |
-| :--- | :--- | :--- |
-| `silence_threshold`| Sensitivity | `0.005` (Quiet) to `0.05` (Loud) |
-| `device_index` | Mic ID | `auto` or specific index `0`, `1`... |
+- 选择系统声音输入设备
+- 调整静音阈值、静音时长、采样率等参数
 
-## Troubleshooting
-- **No Audio?** Check the terminal for "Audio Capture" logs. If using BlackHole, ensure it's selected in `config.ini` or auto-detected.
-- **Resize not working?** Use the designated "◢" handle in the bottom-right.
-- **Hot Reload**: Modify any `.py` file or save settings in the UI to trigger a reload.
+### 语音识别
 
-## 🎯 Using FunASR (NEW!)
+- 可选 Whisper / MLX / FunASR
+- Whisper 适合通用场景
+- MLX 更适合 Apple Silicon
+- FunASR 更适合中文场景
 
-FunASR is Alibaba's industrial-grade ASR toolkit with excellent Chinese language support.
+### 翻译设置
 
-**Quick Start:**
-1. Set backend to `funasr` in Settings or `config.ini`
-2. Choose a FunASR model (e.g., `iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch` for Chinese)
-3. Models auto-download on first use from ModelScope
+- 填写 API 地址、API Key、模型名
+- 选择目标语言
+- 支持保存常用服务商配置
 
-**Recommended Models:**
-- **Chinese (Offline)**: `iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch`
-- **Chinese (Streaming)**: `iic/speech_paraformer_asr_nat-zh-cn-16k-common-vocab8404-online`
-- **English (Streaming)**: `iic/speech_UniASR_asr_2pass-en-16k-common-vocab1080-tensorflow1-online`
-- **Multi-language**: `iic/SenseVoiceSmall` or `FunAudioLLM/SenseVoiceSmall`
-- **Latest 31-language model**: `FunAudioLLM/Fun-ASR-Nano-2512` (Supports dialects, accents, lyrics)
+### 保存位置
 
-**Note**: FunASR model names must include the namespace (e.g., `iic/` or `FunAudioLLM/`)
+- 设置字幕日志保存路径
+- 支持打开目录
 
+### 更新
 
-## License: MIT
-Copyright 2025 Van
+- 填写自己的 GitHub 仓库名，例如：`WZXsea/transworld`
+- 可启用启动时自动检查更新
+- 发现新版本后可自动下载 DMG，用户自行完成拖拽安装
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+## 配置说明
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+软件会把设置保存到 `config.ini`。
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+### `[api]`
+
+| 参数 | 说明 |
+| :--- | :--- |
+| `active_provider` | 当前使用的服务商 |
+
+### `[api.xxx]`
+
+| 参数 | 说明 |
+| :--- | :--- |
+| `api_key` | 对应服务商的密钥 |
+| `base_url` | 接口地址 |
+| `model` | 模型名称 |
+
+### `[translation]`
+
+| 参数 | 说明 |
+| :--- | :--- |
+| `model` | 主要翻译模型 |
+| `target_lang` | 目标语言 |
+| `threads` | 并发数 |
+
+### `[transcription]`
+
+| 参数 | 说明 |
+| :--- | :--- |
+| `backend` | 识别引擎 |
+| `whisper_model` | Whisper 模型 |
+| `funasr_model` | FunASR 模型 |
+| `device` | 推理设备 |
+
+### `[audio]`
+
+| 参数 | 说明 |
+| :--- | :--- |
+| `device_index` | 输入设备编号 |
+| `sample_rate` | 采样率 |
+| `silence_threshold` | 静音阈值 |
+| `silence_duration` | 静音时长 |
+| `streaming_mode` | 是否启用流式识别 |
+
+### `[updates]`
+
+| 参数 | 说明 |
+| :--- | :--- |
+| `repo` | 用于检查更新的 GitHub 仓库 |
+| `auto_check_updates` | 启动时是否自动检查更新 |
+
+## 常见问题
+
+- **为什么安装后不需要重新配置？**  
+  因为程序优先读取你本机的 `~/Library/Application Support/RealtimeSubtitle/config.ini`。
+
+- **为什么自动更新不会碰到我的翻译 API Key？**  
+  因为更新功能只访问 GitHub Releases，不会读取或上传翻译服务的 API Key。
+
+- **为什么有时需要拖一下窗口才刷出来？**  
+  这是窗口布局刷新问题，程序已经在持续优化中。
+
+## 许可证
+
+本项目基于 MIT License。
+
+- 原始项目作者：Van
+- 当前二次优化与发布：WZXsea（同样采用 MIT）
+
+请在继续分发、修改或再发布时，保留原作者与当前维护者的 MIT 版权与许可声明。
+
+原始 MIT 许可文本见 [LICENSE](./LICENSE)。
