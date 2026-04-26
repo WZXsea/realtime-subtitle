@@ -1,9 +1,48 @@
 [api]
-base_url = http://localhost:11434/v1/
-api_key = sk-talkai-bd76c0f60c6f4e50bcfa39fc1dce0efd
+active_provider = DeepSeek
+
+[api.DeepSeek]
+api_key = 
+base_url = https://api.deepseek.com
+model = deepseek-v4-flash
+
+[api.Kimi (月之暗面)]
+api_key = 
+base_url = https://api.moonshot.cn/v1
+model = moonshot-v1-32k
+
+[api.OpenAI (官方)]
+api_key = 
+base_url = https://api.openai.com/v1
+model = gpt-4o-mini
+
+[api.SiliconFlow (硅基流动)]
+api_key = 
+base_url = https://api.siliconflow.cn/v1
+model = deepseek-ai/DeepSeek-V3
+
+[api.智谱 AI (BigModel)]
+api_key = 
+base_url = https://open.bigmodel.cn/api/paas/v4
+model = glm-5
+
+[api.通义千问 (DashScope)]
+api_key = 
+base_url = https://dashscope.aliyuncs.com/compatible-mode/v1
+model = qwen-plus
+
+[api.Grok (xAI)]
+api_key = 
+base_url = https://api.x.ai/v1
+model = grok-4.20-reasoning
+
+[api.Custom]
+api_key = 
+base_url = 
+model = 
 
 [translation]
-model = qwen2.5:7b
+model = deepseek-v4-flash
 target_lang = Chinese
 threads = 4
 
@@ -34,3 +73,6 @@ streaming_step_size = 0.2
 update_interval = 0.8
 streaming_overlap = 0.3
 
+[updates]
+repo = WZXsea/realtime-subtitle
+auto_check_updates = true

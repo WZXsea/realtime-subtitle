@@ -3,3 +3,7 @@ transcripts
 .DS_Store
 config.ini
 .venv
+build/
+dist/
+.cache/
+*.dmg

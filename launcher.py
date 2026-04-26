@@ -5,6 +5,7 @@ import configparser
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QLabel, QProgressBar, QMessageBox, QPushButton)
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
+from config import APP_VERSION
 
 class DependencyInstaller(QThread):
     progress = pyqtSignal(str) # Log message
@@ -67,7 +68,7 @@ class DependencyInstaller(QThread):
 class LauncherWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Real-Time Translator - Launcher")
+        self.setWindowTitle(f"Real-Time Translator v{APP_VERSION} - Launcher")
         self.setFixedSize(400, 200)
         
         # Central Widget
@@ -148,6 +149,9 @@ class LauncherWindow(QMainWindow):
             QMessageBox.critical(self, "Error", error_msg)
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
+    
     app = QApplication(sys.argv)
     
     # Modern Styling for Launcher

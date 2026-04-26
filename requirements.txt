@@ -4,6 +4,16 @@ sounddevice
 numpy
 openai
 pyobjc-framework-CoreAudio; sys_platform == 'darwin'
+pyobjc-framework-Cocoa; sys_platform == 'darwin'
 funasr
 modelscope
 watchdog
+requests
+httpx
+configparser
+mlx
+mlx-whisper
+tqdm
+huggingface_hub
+certifi
+hf_xet

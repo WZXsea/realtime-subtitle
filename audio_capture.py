@@ -32,8 +32,6 @@ class AudioCapture:
         # Streaming mode settings
         self.streaming_mode = streaming_mode
         self.streaming_interval = streaming_interval
-        self.streaming_mode = streaming_mode
-        self.streaming_interval = streaming_interval
         self.streaming_step_size = streaming_step_size
         self.streaming_overlap = streaming_overlap
         
@@ -168,26 +166,6 @@ class AudioCapture:
         silence_start_time = None
         has_speech = False
         
-        def callback(indata, frames, time_info, status):
-            if status:
-                print(status)
-            if not self.running:
-                raise sd.CallbackAbort
-            
-            # Make a copy of data
-            audio_chunk = indata.copy().flatten()
-            
-            # Simple VAD: Check RMS (Root Mean Square) amplitude
-            rms = np.sqrt(np.mean(audio_chunk**2))
-            
-            # Communicate via non-local variables (or just process here)
-            # Since callback is in a separate thread managed by sounddevice, 
-            # we need to be careful. However, pure python processing in callback 
-            # might block if too slow. 
-            # Better strategy: push raw chunks to a processing queue, 
-            # but for simplicity, let's use a shared list with lock or just a queue for raw chunks.
-            pass
-
         # To avoid complexity with callbacks, let's use a blocking read in this thread
         # sounddevice.InputStream logic
         

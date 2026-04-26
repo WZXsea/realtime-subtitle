@@ -1,30 +1,139 @@
 import numpy as np
+import os
+from config import resource_path
+import time
+
+# Hub Progress Callback logic
+class HubProgress:
+    """A minimal tqdm-compatible wrapper to pipe progress to a callback"""
+    def __init__(self, callback=None, prefix=""):
+        self.callback = callback
+        self.prefix = prefix
+        self.last_update = 0
+
+    def update(self, n=1):
+        if not self.callback:
+            return
+        # In a real tqdm, n is the increment. We don't have total here easily
+        # unless we capture it from the constructor. 
+        # For simplicity, we'll just emit a "heartbeat" progress
+        now = time.time()
+        if now - self.last_update < 0.2:
+            return
+        self.last_update = now
+        self.callback(-1, f"{self.prefix}...")
+
+    def close(self):
+        pass
+
+    def set_description(self, desc):
+        if self.callback:
+            self.callback(-1, f"{self.prefix} {desc}")
 
 class Transcriber:
-    def __init__(self, backend="whisper", model_size="base", device="cpu", compute_type="int8", language=None):
-        """
-        Initialize Transcriber with multiple backend support
-        
-        Args:
-            backend: ASR backend to use - 'whisper', 'mlx', or 'funasr'
-            model_size: Model identifier (for Whisper: tiny/base/small/medium/large/turbo, for FunASR: model name)
-            device: Device to use (cpu/cuda/auto)
-            compute_type: Compute type for faster-whisper (int8/float16/float32)
-            language: Source language code or None for auto-detect
-        """
+    global_progress_callback = None
+    
+    def __init__(self, backend="whisper", model_size="base", device="cpu", compute_type="int8", language=None, progress_callback=None):
         self.backend = backend.lower()
         self.language = language
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type
         self.model = None
+        self.detected_language = None
+        self.progress_callback = progress_callback
         
+        # Internal wrapper to log progress calls
+        if self.progress_callback:
+            def wrapped_callback(p, m):
+                self.progress_callback(p, m)
+            self._internal_callback = wrapped_callback
+        else:
+            self._internal_callback = None
+
+        if self._internal_callback:
+            self._internal_callback(5, f"正在准备 {self.backend} 后端...")
+        
+        # Pre-download check
+        self._ensure_model_downloaded()
+
         if self.backend == "funasr":
             self._init_funasr(model_size, device)
         elif self.backend == "mlx":
             self._init_mlx(model_size)
         else:  # default to whisper
             self._init_whisper(model_size, device, compute_type)
+
+    def _ensure_model_downloaded(self):
+        """Explicitly download models using huggingface_hub to show progress"""
+        if not self.progress_callback:
+            return
+
+        try:
+            import huggingface_hub
+            from huggingface_hub import snapshot_download
+            
+            repo_id = None
+            if self.backend == "mlx":
+                repo_id = f"mlx-community/whisper-{self.model_size}-mlx"
+            elif self.backend == "funasr":
+                repo_id = self.model_size
+            elif self.backend == "whisper":
+                if self.model_size in ["tiny", "base", "small", "medium", "large-v1", "large-v2", "large-v3"]:
+                    repo_id = f"Systran/faster-whisper-{self.model_size}"
+                else:
+                    repo_id = self.model_size
+            
+            if not repo_id:
+                print(f"[Transcriber] No repo_id found for backend={self.backend}, size={self.model_size}")
+                return
+
+            if os.path.isdir(repo_id) or (os.path.sep in repo_id and not "/" in repo_id):
+                print(f"[Transcriber] repo_id '{repo_id}' appears to be a local path, skipping pre-check.")
+                return
+
+            self.progress_callback(10, f"正在检查并准备下载模型: {repo_id}...")
+            
+            # --- Robust Global TQDM Proxy ---
+            try:
+                from model_manager import GlobalUI_Tqdm
+                import huggingface_hub.utils._tqdm as hf_hub_utils
+                
+                # Setup callback
+                def notify_cb(percent, msg):
+                    self.progress_callback(percent, msg)
+                
+                GlobalUI_Tqdm.callback = notify_cb
+                
+                # Store original and patch
+                self._original_hf_tqdm = hf_hub_utils.tqdm
+                hf_hub_utils.tqdm = GlobalUI_Tqdm
+                print("[Transcriber] Global HF-Hub TQDM proxy enabled.")
+            except Exception as e:
+                print(f"[Transcriber] Warning: Could not patch global tqdm: {e}")
+
+            # Perform the actual download check
+            # PASSING tqdm_class=GlobalUI_Tqdm explicitly is the safest way
+            from model_manager import GlobalUI_Tqdm
+            snapshot_download(
+                repo_id=repo_id,
+                local_files_only=False,
+                tqdm_class=GlobalUI_Tqdm,
+                max_workers=4,
+                local_dir_use_symlinks=False # 核心兼容补丁
+            )
+            
+            # Restore
+            if hasattr(self, '_original_hf_tqdm'):
+                import huggingface_hub.utils._tqdm as hf_hub_utils
+                hf_hub_utils.tqdm = self._original_hf_tqdm
+                print("[Transcriber] Global HF-Hub TQDM proxy restored.")
+            
+            self.progress_callback(100, "模型文件就绪，正在启动引擎...")
+            
+        except Exception as e:
+            print(f"[Transcriber] Model pre-check skipped or failed: {e}")
+            # Non-fatal, the underlying library will try its own way
 
     def _init_whisper(self, model_size, device, compute_type):
         """Initialize faster-whisper backend"""
@@ -33,10 +142,11 @@ class Transcriber:
         print(f"[Transcriber] Using faster-whisper (CPU/CUDA) with model: {model_size}")
     
     def _init_mlx(self, model_size):
-        sssss
         try:
             import mlx_whisper
-            # MLX doesn't need explicit model loading here
+            if self.progress_callback:
+                self.progress_callback(30, "载入 MLX Whisper 引擎...")
+            # MLX doesn't need explicit model loading here, but we'll check repo soon
             print(f"[Transcriber] Using MLX Whisper (Metal Acceleration) with model: {model_size}")
         except ImportError:
             print("[Transcriber] Warning: mlx_whisper not available, falling back to faster-whisper")
@@ -46,6 +156,9 @@ class Transcriber:
     def _init_funasr(self, model_size, device):
         """Initialize FunASR backend with device support"""
         try:
+            if self.progress_callback:
+                self.progress_callback(20, f"正在初始化 FunASR 模型: {model_size}...")
+            
             from funasr import AutoModel
             import platform
             import torch
@@ -349,6 +462,10 @@ class Transcriber:
         return "cpu"
     def transcribe(self, audio_data, prompt=None):
         """Transcribe audio using the configured backend"""
+        # Inject default prompt for guiding model style (optional, simplified now)
+        if not prompt:
+            prompt = ""
+            
         if self.backend == "funasr":
             text = self._transcribe_funasr(audio_data, prompt)
         elif self.backend == "mlx":
@@ -384,12 +501,23 @@ class Transcriber:
         if not text:
             return False
             
+        # 1. Character-level repetition check (Crucial for CJK/Japanese like "んんん...")
+        # If any single character repeats more than 10 times consecutively
+        import re
+        if re.search(r'(.)\1{10,}', text):
+            return True
+
         words = text.split()
         if not words:
             return False
             
-        # 1. Check for immediate consecutive repetitions of the same word
-        # e.g. "once once once once once"
+        # 2. Check for unusually long "words" (Without spaces)
+        # Typical sentences have spaces; hallucinations often have 100+ chars with no space
+        for word in words:
+            if len(word) > 60: # Extremely long single string is likely a hallucination
+                return True
+
+        # 3. Check for immediate consecutive repetitions of the same word (English/Spaced)
         max_repeats = 0
         current_repeats = 1
         last_word = ""
@@ -406,8 +534,7 @@ class Transcriber:
         if max_repeats > 4:
             return True
             
-        # 2. Check for low information density (unique words / total words)
-        # e.g. "that was that was that was that was"
+        # 4. Check for low information density (unique words / total words)
         if len(words) > 10:
             unique_words = set(words)
             ratio = len(unique_words) / len(words)
@@ -499,7 +626,6 @@ class Transcriber:
             
             # Extract text from result
             if isinstance(result, list) and len(result) > 0:
-                # FunASR returns a list of results
                 text_parts = []
                 for item in result:
                     if isinstance(item, dict) and 'text' in item:
@@ -509,23 +635,10 @@ class Transcriber:
                 return " ".join(text_parts).strip()
             elif isinstance(result, dict) and 'text' in result:
                 return result['text'].strip()
-            else:
-                return ""
+            return ""
                 
         except Exception as e:
-            error_msg = str(e)
-            if "float64" in error_msg and hasattr(self, 'funasr_device') and self.funasr_device == "mps":
-                print(f"[Transcriber] FunASR Error: {e}")
-                import traceback
-                import sys
-                print("[Transcriber] Full traceback (saving to /tmp/funasr_mps_error.txt):")
-                with open('/tmp/funasr_mps_error.txt', 'w') as f:
-                    traceback.print_exc(file=f)
-                    f.write("\n\n=== Stack ===\n")
-                    traceback.print_stack(file=f)
-                traceback.print_exc()
-            else:
-                print(f"[Transcriber] FunASR Error: {e}")
+            print(f"[Transcriber] FunASR Error: {e}")
             return ""
 
     def _transcribe_mlx(self, audio_data, prompt=None):
@@ -534,9 +647,14 @@ class Transcriber:
         # We need to ensure audio_data is in the format MLX expects (usually numpy array)
         
         try:
-            # Prepare kwargs
+            # Check for bundled model first, then fall back to HF repo
+            model_path = resource_path(f"models/whisper-{self.model_size}-mlx")
+            if not os.path.exists(model_path):
+                model_path = f"mlx-community/whisper-{self.model_size}-mlx"
+            
+            # Prepare kwargs - MLX-Whisper defaults to fast greedy decoding
             kwargs = {
-                "path_or_hf_repo": f"mlx-community/whisper-{self.model_size}-mlx",
+                "path_or_hf_repo": model_path,
                 "language": self.language,
                 "temperature": 0.0
             }
@@ -544,6 +662,11 @@ class Transcriber:
                 kwargs["initial_prompt"] = prompt
                 
             result = mlx_whisper.transcribe(audio_data, **kwargs)
+            
+            # Capture detected language (available when language=None / auto)
+            if not self.language and "language" in result:
+                self.detected_language = result["language"]
+            
             return result.get("text", "").strip()
         except Exception as e:
             error_msg = str(e)

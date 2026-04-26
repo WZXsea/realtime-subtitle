@@ -1,5 +1,9 @@
 # Real-Time Translator 🎙️➡️🇨🇳
 
+**v2.0.0**
+
+本版本重点优化了实时字幕体验：启动提示更清晰、悬浮窗堆叠更稳定、保存流程更顺滑、加入 token 统计、支持自动检查更新，并继续优化了流式字幕更新效果。
+
 A high-performance real-time speech-to-text and translation application built for macOS (Apple Silicon optimized).
 
 ## Features
@@ -10,6 +14,7 @@ A high-performance real-time speech-to-text and translation application built fo
 - **🖥️ Overlay UI**: Always-on-top, transparent, click-through window for seamless usage during meetings/videos.
 - **⚙️ Hot Reloading**: Change code or config and the app restarts automatically.
 - **💾 Transcript Saving**: One-click save of your session history. Can be used as subtitle or LLM analyze.
+- **🔄 自动检查更新**：控制中心可以检查你自己的 GitHub Releases 仓库是否有新版本。
 
 ## Demo
 https://github.com/user-attachments/assets/9982fe5d-3937-42d5-bcfc-e23748c01edf

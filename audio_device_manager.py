@@ -11,15 +11,6 @@ class AudioDeviceManager:
     def __init__(self):
         if platform.system() != "Darwin":
             raise RuntimeError("AudioDeviceManager only works on macOS")
-        
-        try:
-            import CoreAudio
-            self.CoreAudio = CoreAudio
-        except ImportError:
-            raise ImportError(
-                "PyObjC CoreAudio framework not installed. "
-                "Install with: pip install pyobjc-framework-CoreAudio"
-            )
     
     def get_output_devices(self):
         """Get list of all output audio devices"""
