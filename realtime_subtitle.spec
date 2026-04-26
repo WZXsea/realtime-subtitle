@@ -1,7 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
-from config import APP_VERSION
+
+APP_VERSION = "2.0.0"
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
